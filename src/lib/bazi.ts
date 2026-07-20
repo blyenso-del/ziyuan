@@ -1,4 +1,5 @@
 /** 八字排盘：四柱、藏干、十神、五行、纳音、空亡、神煞、刑冲合害、十二长生、大运等 */
+import { getHeavenlyStemAndEarthlyBranchBySolarDate } from 'lunar-lite'
 
 export type Stem = '甲' | '乙' | '丙' | '丁' | '戊' | '己' | '庚' | '辛' | '壬' | '癸'
 export type Branch =
@@ -1012,37 +1013,80 @@ export function buildBaziFromRaw(
   }
 }
 
-export function buildBaziFromAstrolabe(raw: {
-  gender: string
-  solarDate: string
-  lunarDate: string
-  time: string
-  timeRange: string
-  chineseDate?: string
-  rawDates: {
-    chineseDate: {
-      yearly: [string, string]
-      monthly: [string, string]
-      daily: [string, string]
-      hourly: [string, string]
-    }
-  }
-}): BaziView {
-  const c = raw.rawDates.chineseDate
+/**
+ * 从公历 + 时辰索引排四柱（节气换月、立春换年）
+ * 注意：勿直接用 iztro rawDates.chineseDate 的月柱——与标准八字节气月常不一致。
+ */
+export function buildBaziFromSolar(
+  solarDate: string,
+  timeIndex: number,
+  meta: { gender: string; lunarDate: string; timeLabel: string },
+): BaziView {
+  const date = solarDate.replace(/\//g, '-')
+  const ti = Number.isFinite(timeIndex) ? Math.min(12, Math.max(0, Math.round(timeIndex))) : 0
+  // lunar-lite：year exact=立春换年；月柱按节气，与主流八字软件一致
+  const gz = getHeavenlyStemAndEarthlyBranchBySolarDate(date, ti, { year: 'exact' })
+  const asPair = (arr: string[]): [string, string] => [arr[0], arr[1]]
   return buildBaziFromRaw(
     {
-      yearly: c.yearly,
-      monthly: c.monthly,
-      daily: c.daily,
-      hourly: c.hourly,
+      yearly: asPair(gz.yearly),
+      monthly: asPair(gz.monthly),
+      daily: asPair(gz.daily),
+      hourly: asPair(gz.hourly),
     },
     {
-      gender: raw.gender,
-      solarDate: raw.solarDate,
-      lunarDate: raw.lunarDate,
-      timeLabel: `${raw.time}（${raw.timeRange}）`,
+      gender: meta.gender,
+      solarDate: date,
+      lunarDate: meta.lunarDate,
+      timeLabel: meta.timeLabel,
     },
   )
+}
+
+export function buildBaziFromAstrolabe(
+  raw: {
+    gender: string
+    solarDate: string
+    lunarDate: string
+    time: string
+    timeRange: string
+    chineseDate?: string
+    rawDates?: {
+      chineseDate?: {
+        yearly: [string, string]
+        monthly: [string, string]
+        daily: [string, string]
+        hourly: [string, string]
+      }
+    }
+  },
+  timeIndex = 0,
+): BaziView {
+  try {
+    return buildBaziFromSolar(raw.solarDate, timeIndex, {
+      gender: raw.gender,
+      lunarDate: raw.lunarDate,
+      timeLabel: `${raw.time}（${raw.timeRange}）`,
+    })
+  } catch {
+    // 兜底：iztro 四柱（月柱可能偏差）
+    const c = raw.rawDates?.chineseDate
+    if (!c) throw new Error('无法排八字四柱')
+    return buildBaziFromRaw(
+      {
+        yearly: c.yearly,
+        monthly: c.monthly,
+        daily: c.daily,
+        hourly: c.hourly,
+      },
+      {
+        gender: raw.gender,
+        solarDate: raw.solarDate,
+        lunarDate: raw.lunarDate,
+        timeLabel: `${raw.time}（${raw.timeRange}）`,
+      },
+    )
+  }
 }
 
 export const WUXING_COLOR: Record<WuXing, string> = {

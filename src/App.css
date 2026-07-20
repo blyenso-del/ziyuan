@@ -582,6 +582,14 @@ select {
   box-sizing: border-box;
 }
 
+/* 命宫三方四正：统一底色（命+三合+对宫） */
+.palace.is-sifang {
+  background: #f7f0e4;
+  border-color: #e5d5b8;
+}
+
+/* 命宫在三方四正内再略深一档，仍同色系 */
+.palace.is-sifang.is-soul,
 .palace.is-soul {
   background: var(--soul);
   border-color: #e0c48a;
@@ -591,7 +599,7 @@ select {
   box-shadow: inset 0 0 0 1px #8ab4e8;
 }
 
-/* 运限：只强调流年（实底）和大限（虚线），其余靠角标 */
+/* 运限：只强调流年（实底）和大限（虚线），其余靠角标；覆盖三方四正底色 */
 .palace.hl-yearly {
   background: #e6f7f4 !important;
   border-color: var(--yearly) !important;
@@ -605,7 +613,8 @@ select {
   box-shadow: none;
 }
 
-.palace.hl-yearly.is-soul {
+.palace.hl-yearly.is-soul,
+.palace.hl-yearly.is-sifang {
   background: #dff5f0 !important;
 }
 
@@ -881,6 +890,13 @@ select {
   color: #e8eef6;
 }
 
+/* 深色盘：三方四正统一偏暖底 */
+.skin-sihua .palace.is-sifang {
+  background: #252018;
+  border-color: #5a4a2e;
+}
+
+.skin-sihua .palace.is-sifang.is-soul,
 .skin-sihua .palace.is-soul {
   background: #2a2418;
   border-color: #8a6b2f;

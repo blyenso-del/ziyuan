@@ -106,7 +106,8 @@ export default function App() {
   }
 
   const onSaveCase = () => {
-    const rec = upsertCase(birth, activeCaseId)
+    // 始终新增命例，不覆盖当前选中的旧记录
+    const rec = upsertCase(birth)
     setActiveCaseId(rec.id)
     setCases(loadCases())
   }

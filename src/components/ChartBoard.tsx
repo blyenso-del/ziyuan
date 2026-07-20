@@ -19,6 +19,27 @@ type Props = {
   showFlySelf: boolean
 }
 
+const BRANCHES = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'] as const
+
+/** 地支三合 */
+function triHarmony(branch: string): string[] {
+  const groups = [
+    ['申', '子', '辰'],
+    ['寅', '午', '戌'],
+    ['巳', '酉', '丑'],
+    ['亥', '卯', '未'],
+  ]
+  return groups.find((g) => g.includes(branch)) || []
+}
+
+/** 命宫三方四正地支（命 + 三合方 + 对宫） */
+function soulZoneBranches(soulBranch: string): Set<string> {
+  const i = BRANCHES.indexOf(soulBranch as (typeof BRANCHES)[number])
+  if (i < 0) return new Set()
+  const opp = BRANCHES[(i + 6) % 12]
+  return new Set([soulBranch, ...triHarmony(soulBranch), opp])
+}
+
 /** 飞星精简：只保留主星 + 带生年四化/自化的辅星 */
 function filterStarsForFlyCompact(stars: StarView[], type: StarView['type']): StarView[] {
   if (type === 'major') return stars
@@ -79,6 +100,7 @@ function PalaceCell({
   showMinor,
   showAdj,
   highlight,
+  inSoulZone,
   flowBadges,
   flyTags,
   style,
@@ -89,6 +111,8 @@ function PalaceCell({
   showMinor: boolean
   showAdj: boolean
   highlight?: string
+  /** 命宫三方四正统一底色 */
+  inSoulZone?: boolean
   flowBadges?: { key: string; label: string }[]
   flyTags: MutagenName[]
   style: CSSProperties
@@ -121,6 +145,7 @@ function PalaceCell({
       style={style}
       className={[
         'palace',
+        inSoulZone ? 'is-sifang' : '',
         p.isSoul ? 'is-soul' : '',
         p.isBodyPalace ? 'is-body' : '',
         highlight || '',
@@ -203,6 +228,12 @@ export function ChartBoard({
 }: Props) {
   const compactFly = mode === 'fly' && skin === 'compact'
 
+  /** 命宫三方四正：统一底色，便于看格局会照范围 */
+  const soul = chart.palaces.find((p) => p.isSoul)
+  const sifangSet = soul?.earthlyBranch
+    ? soulZoneBranches(soul.earthlyBranch)
+    : new Set<string>()
+
   /**
    * 运限高亮策略（清晰优先）：
    * - 流年：主高亮（整宫底色 + 实线边）——改日期时最该看的
@@ -252,8 +283,8 @@ export function ChartBoard({
             </strong>
             <span>
               {skin === 'compact'
-                ? '主星为主 · 隐藏亮度/长生'
-                : '主星亮度 · 大限流年 · 身宫来因'}
+                ? '主星为主 · 隐藏亮度/长生 · 米黄=三方四正'
+                : '主星亮度 · 米黄底=命宫三方四正 · 大限流年 · 身宫来因'}
             </span>
           </>
         ) : (
@@ -382,6 +413,7 @@ export function ChartBoard({
                 showMinor={showMinor}
                 showAdj={showAdj}
                 highlight={hl(p)}
+                inSoulZone={sifangSet.has(p.earthlyBranch)}
                 flowBadges={flowBadges(p)}
                 flyTags={tagsByIndex.get(p.index) || []}
                 style={{

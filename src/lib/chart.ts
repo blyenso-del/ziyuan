@@ -186,7 +186,10 @@ export function buildChart(
     effectiveTimeIndex: resolved.timeIndex,
     inputCalendar: input.calendarType,
     fly: { natal: [], self: [], arrows: [] },
-    bazi: buildBaziFromAstrolabe(raw as Parameters<typeof buildBaziFromAstrolabe>[0]),
+    bazi: buildBaziFromAstrolabe(
+      raw as Parameters<typeof buildBaziFromAstrolabe>[0],
+      resolved.timeIndex,
+    ),
   }
   view.fly = analyzeFlyStars(view)
   return view
