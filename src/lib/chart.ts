@@ -5,6 +5,7 @@ import { getMutagensByStem, SIHUA_LABELS } from './sihua'
 import { toTrueSolarTime, timeIndexToClock } from './solarTime'
 import { normalizeBranch } from './time'
 import { analyzeFlyStars, type FlyStarSummary } from './flyStar'
+import { buildBaziFromAstrolabe, type BaziView } from './bazi'
 
 export type StarView = {
   name: string
@@ -53,6 +54,8 @@ export type ChartView = {
   effectiveTimeIndex: number
   inputCalendar: 'solar' | 'lunar'
   fly: FlyStarSummary
+  /** 八字四柱 */
+  bazi: BaziView
 }
 
 export type HoroscopeView = {
@@ -183,6 +186,7 @@ export function buildChart(
     effectiveTimeIndex: resolved.timeIndex,
     inputCalendar: input.calendarType,
     fly: { natal: [], self: [], arrows: [] },
+    bazi: buildBaziFromAstrolabe(raw as Parameters<typeof buildBaziFromAstrolabe>[0]),
   }
   view.fly = analyzeFlyStars(view)
   return view

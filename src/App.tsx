@@ -6,6 +6,7 @@ import { ChartBoard } from './components/ChartBoard'
 import { FlyStarPanel } from './components/FlyStarPanel'
 import { GejuPanel } from './components/GejuPanel'
 import { HoroscopePanel } from './components/HoroscopePanel'
+import { BaziPanel } from './components/BaziPanel'
 import {
   deleteCase,
   exportCasesJson,
@@ -14,7 +15,7 @@ import {
   upsertCase,
 } from './lib/cases'
 import { buildChart, buildHoroscope, type ChartView, type HoroscopeView } from './lib/chart'
-import { matchGeju, gejuStats } from './lib/geju'
+import { matchGeju } from './lib/geju'
 import { solarToLunar } from './lib/lunar'
 import type { BirthInput, CaseRecord, SkinMode } from './types'
 import './App.css'
@@ -62,7 +63,9 @@ export default function App() {
   const [cases, setCases] = useState<CaseRecord[]>(() => loadCases())
   const [activeCaseId, setActiveCaseId] = useState<string>()
   const [error, setError] = useState('')
-  const [tab, setTab] = useState<'chart' | 'geju' | 'cases' | 'fly'>('chart')
+  const [tab, setTab] = useState<'chart' | 'geju' | 'cases' | 'fly' | 'bazi' | 'liunian'>(
+    'chart',
+  )
 
   const refreshHoroscope = useCallback((c: ChartView, date: string) => {
     try {
@@ -147,16 +150,32 @@ export default function App() {
     a.click()
   }
 
-  const stats = gejuStats()
-
   return (
     <div className="app">
       <header className="topbar">
         <div className="brand">
           <h1>紫垣天机</h1>
           <p>
-            紫微斗数排盘 · 真太阳时 · 飞星四化 · 格局（{stats.strictRules} 规则 / 库{' '}
-            {stats.total}）
+            紫微斗数排盘 · 真太阳时 · 飞星四化 · 八字流年 ·{' '}
+            <a
+              className="brand-qq"
+              href="mqqapi://card/show_pslcard?src_type=internal&version=1&uin=924998087&card_type=group&source=qrcode"
+              title="QQ群：924998087 · 点击唤起QQ加群，失败可复制群号"
+              onClick={(e) => {
+                try {
+                  void navigator.clipboard?.writeText('924998087')
+                } catch {
+                  /* ignore */
+                }
+                // 桌面端协议常无效：弹出群号便于复制
+                if (!/Mobile|Android|iPhone|iPad/i.test(navigator.userAgent)) {
+                  e.preventDefault()
+                  window.prompt('QQ群号已尝试复制，可手动再复制：', '924998087')
+                }
+              }}
+            >
+              加QQ群一起交流 924998087
+            </a>
           </p>
         </div>
         <div className="top-actions">
@@ -215,6 +234,8 @@ export default function App() {
       <nav className="tabs">
         {(
           [
+            ['bazi', '八字'],
+            ['liunian', '流年'],
             ['chart', '命盘'],
             ['fly', '飞星'],
             ['geju', '格局'],
@@ -283,6 +304,12 @@ export default function App() {
               )}
             </>
           )}
+          {tab === 'bazi' && (
+            <BaziPanel bazi={chart?.bazi ?? null} personName={birth.name} mode="full" />
+          )}
+          {tab === 'liunian' && (
+            <BaziPanel bazi={chart?.bazi ?? null} personName={birth.name} mode="liunian" />
+          )}
           {tab === 'geju' && <GejuPanel hits={gejuHits} />}
           {tab === 'cases' && (
             <CaseLibrary
@@ -317,7 +344,7 @@ export default function App() {
       </main>
 
       <footer className="footer">
-        <span>紫垣天机 · 紫微斗数排盘（iztro 引擎）</span>
+        <span>紫垣天机 · 紫微斗数 / 八字排盘</span>
         <span>仅供学习研究，请勿作为决策唯一依据</span>
       </footer>
     </div>
