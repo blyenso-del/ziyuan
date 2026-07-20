@@ -1,0 +1,6 @@
+/* global reset handled in App.css */
+html,
+body,
+#root {
+  min-height: 100%;
+}
